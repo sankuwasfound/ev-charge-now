@@ -21,6 +21,7 @@ export interface Location {
 
 export interface Order {
   id: string;
+  battery_id: string;
   battery_name: string;
   battery_capacity: string;
   battery_price: number;
@@ -29,6 +30,8 @@ export interface Order {
   total_cost: number;
   payment_method: string;
   location_address: string;
+  location_lat: number;
+  location_lng: number;
   status: string;
   created_at: string;
 }
