@@ -1,13 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAppStore } from '@/store/appStore';
+import LoginScreen from '@/components/LoginScreen';
+import OtpScreen from '@/components/OtpScreen';
+import LocationScreen from '@/components/LocationScreen';
+import BatteryScreen from '@/components/BatteryScreen';
+import DeliveryScreen from '@/components/DeliveryScreen';
+import PaymentScreen from '@/components/PaymentScreen';
+import TrackingScreen from '@/components/TrackingScreen';
+
+const screens: Record<string, React.FC> = {
+  login: LoginScreen,
+  otp: OtpScreen,
+  location: LocationScreen,
+  battery: BatteryScreen,
+  delivery: DeliveryScreen,
+  payment: PaymentScreen,
+  tracking: TrackingScreen,
+};
 
 const Index = () => {
+  const step = useAppStore((s) => s.step);
+  const Screen = screens[step];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -30 }}
+        transition={{ duration: 0.25 }}
+      >
+        <Screen />
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
