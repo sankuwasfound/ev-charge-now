@@ -2,11 +2,20 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Battery, Clock, Phone, Car, Plane, Building2, Navigation, Zap } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
+import LeafletMap from '@/components/LeafletMap';
 
 const TrackingScreen = () => {
   const { battery, deliveryMethod, location, totalCost } = useAppStore();
   const [progress, setProgress] = useState(0);
   const [eta, setEta] = useState(deliveryMethod === 'drone' ? 12 : deliveryMethod === 'carpool' ? 25 : 40);
+
+  const destLat = location?.lat || 28.6139;
+  const destLng = location?.lng || 77.209;
+  const startLat = destLat + 0.04;
+  const startLng = destLng + 0.05;
+
+  const currentLat = startLat + (destLat - startLat) * (progress / 100);
+  const currentLng = startLng + (destLng - startLng) * (progress / 100);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,61 +40,25 @@ const TrackingScreen = () => {
   };
 
   const DeliveryIcon = deliveryMethod === 'drone' ? Plane : deliveryMethod === 'carpool' ? Car : Building2;
+  const deliveryLabel = deliveryMethod === 'drone' ? 'Drone' : deliveryMethod === 'carpool' ? 'Driver' : 'Station';
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--gradient-surface)' }}>
-      {/* Mini Map */}
-      <div className="relative h-[35vh] bg-accent overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-primary/15" />
-        {/* Grid */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.07]">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <line key={`h${i}`} x1="0" y1={`${i * 3.3}%`} x2="100%" y2={`${i * 3.3}%`} stroke="currentColor" className="text-primary" />
-          ))}
-          {Array.from({ length: 30 }).map((_, i) => (
-            <line key={`v${i}`} x1={`${i * 3.3}%`} y1="0" x2={`${i * 3.3}%`} y2="100%" stroke="currentColor" className="text-primary" />
-          ))}
-        </svg>
-
-        {/* Route line */}
-        <svg className="absolute inset-0 w-full h-full">
-          <line x1="25%" y1="70%" x2="75%" y2="30%" stroke="hsl(263 70% 58%)" strokeWidth="3" strokeDasharray="8 4" opacity="0.5" />
-        </svg>
-
-        {/* Destination */}
-        <motion.div className="absolute" style={{ left: '25%', top: '65%' }}>
-          <div className="relative">
-            <MapPin className="w-8 h-8 text-primary" />
-            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-foreground bg-card px-2 py-0.5 rounded-full shadow-sm">
-              You
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Moving delivery icon */}
-        <motion.div
-          className="absolute"
-          initial={{ left: '75%', top: '25%' }}
-          animate={{ left: `${75 - progress * 0.5}%`, top: `${25 + progress * 0.45}%` }}
-          transition={{ ease: 'linear' }}
-        >
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center shadow-glow">
-              <DeliveryIcon className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div className="absolute -inset-2 rounded-full border-2 border-primary/20 animate-ping" />
-          </div>
-        </motion.div>
-
-        {/* Station marker */}
-        <div className="absolute" style={{ right: '15%', top: '20%' }}>
-          <div className="flex items-center gap-1 bg-card px-2 py-1 rounded-lg shadow-sm text-[10px] text-muted-foreground">
-            <Building2 className="w-3 h-3 text-primary" /> Nearest Station
-          </div>
-        </div>
-
+      {/* Live Map */}
+      <div className="relative h-[35vh]">
+        <LeafletMap
+          center={[destLat, destLng]}
+          zoom={13}
+          markers={[
+            { lat: destLat, lng: destLng, label: 'You', color: '#16a34a' },
+            { lat: startLat + 0.01, lng: startLng + 0.01, label: 'Station', color: '#6366f1' },
+          ]}
+          movingMarker={{ lat: currentLat, lng: currentLng, label: deliveryLabel }}
+          routeLine={{ from: [destLat, destLng], to: [startLat, startLng] }}
+          className="h-full"
+        />
         {/* ETA overlay */}
-        <div className="absolute top-4 left-4 glass-card px-3 py-2">
+        <div className="absolute top-4 left-4 glass-card px-3 py-2 z-[1000]">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-primary" />
             <div>
@@ -186,22 +159,10 @@ const TrackingScreen = () => {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3">Drone Details</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[10px] text-muted-foreground">Model</p>
-                <p className="text-sm font-medium text-foreground">{droneInfo.model}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">Drone ID</p>
-                <p className="text-sm font-medium text-foreground">{droneInfo.id}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">Altitude</p>
-                <p className="text-sm font-medium text-foreground">{droneInfo.altitude}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground">Speed</p>
-                <p className="text-sm font-medium text-foreground">{droneInfo.speed}</p>
-              </div>
+              <div><p className="text-[10px] text-muted-foreground">Model</p><p className="text-sm font-medium text-foreground">{droneInfo.model}</p></div>
+              <div><p className="text-[10px] text-muted-foreground">Drone ID</p><p className="text-sm font-medium text-foreground">{droneInfo.id}</p></div>
+              <div><p className="text-[10px] text-muted-foreground">Altitude</p><p className="text-sm font-medium text-foreground">{droneInfo.altitude}</p></div>
+              <div><p className="text-[10px] text-muted-foreground">Speed</p><p className="text-sm font-medium text-foreground">{droneInfo.speed}</p></div>
             </div>
           </motion.div>
         )}

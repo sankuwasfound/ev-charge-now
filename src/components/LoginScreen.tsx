@@ -1,19 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, Zap, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const LoginScreen = () => {
-  const { setPhone, setStep } = useAppStore();
+  const { setPhone, setStep, setUser } = useAppStore();
   const [phoneInput, setPhoneInput] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  // Check for existing session on mount
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setPhone(session.user.phone?.replace('+91', '') || '');
+        setStep('location');
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setPhone(session.user.phone?.replace('+91', '') || '');
+        setStep('location');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async () => {
     const cleaned = phoneInput.replace(/\D/g, '');
     if (cleaned.length !== 10) {
       setError('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setLoading(true);
+    const { error: authError } = await supabase.auth.signInWithOtp({
+      phone: `+91${cleaned}`,
+    });
+    setLoading(false);
+
+    if (authError) {
+      toast.error(authError.message);
       return;
     }
     setPhone(cleaned);
@@ -28,7 +62,6 @@ const LoginScreen = () => {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0 }}
@@ -42,7 +75,6 @@ const LoginScreen = () => {
           <p className="text-muted-foreground mt-2">Emergency Battery Delivery</p>
         </div>
 
-        {/* Login Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -68,12 +100,15 @@ const LoginScreen = () => {
           </div>
           {error && <p className="text-destructive text-xs mb-3">{error}</p>}
 
-          <Button onClick={handleSubmit} className="w-full gradient-primary text-primary-foreground mt-4 h-12 text-base font-semibold shadow-glow">
-            Get OTP
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full gradient-primary text-primary-foreground mt-4 h-12 text-base font-semibold shadow-glow"
+          >
+            {loading ? 'Sending OTP...' : 'Get OTP'}
           </Button>
         </motion.div>
 
-        {/* Features */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
