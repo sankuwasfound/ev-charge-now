@@ -14,7 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          battery_capacity: string
+          battery_id: string
+          battery_name: string
+          battery_price: number
+          created_at: string
+          delivery_cost: number
+          delivery_method: string
+          id: string
+          location_address: string
+          location_lat: number
+          location_lng: number
+          payment_method: string
+          phone: string
+          status: string
+          total_cost: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          battery_capacity: string
+          battery_id: string
+          battery_name: string
+          battery_price: number
+          created_at?: string
+          delivery_cost?: number
+          delivery_method: string
+          id?: string
+          location_address: string
+          location_lat: number
+          location_lng: number
+          payment_method: string
+          phone: string
+          status?: string
+          total_cost: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          battery_capacity?: string
+          battery_id?: string
+          battery_name?: string
+          battery_price?: number
+          created_at?: string
+          delivery_cost?: number
+          delivery_method?: string
+          id?: string
+          location_address?: string
+          location_lat?: number
+          location_lng?: number
+          payment_method?: string
+          phone?: string
+          status?: string
+          total_cost?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
