@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Smartphone, CreditCard, Landmark, Banknote, AlertCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/appStore';
-import { toast } from 'sonner';
 import type { PaymentMethod } from '@/store/appStore';
 
 const paymentOptions: { id: PaymentMethod; name: string; desc: string; icon: typeof Smartphone }[] = [
@@ -14,19 +13,15 @@ const paymentOptions: { id: PaymentMethod; name: string; desc: string; icon: typ
 ];
 
 const PaymentScreen = () => {
-  const { totalCost, setPaymentMethod, setStep, saveOrder } = useAppStore();
+  const { totalCost, setPaymentMethod, setStep } = useAppStore();
   const [selected, setSelected] = useState<PaymentMethod | null>(null);
-  const [loading, setLoading] = useState(false);
   const codRestricted = totalCost > 4000;
 
-  const handlePay = async () => {
-    if (!selected) return;
-    setPaymentMethod(selected);
-    setLoading(true);
-    await saveOrder();
-    setLoading(false);
-    toast.success('Order placed successfully!');
-    setStep('tracking');
+  const handlePay = () => {
+    if (selected) {
+      setPaymentMethod(selected);
+      setStep('tracking');
+    }
   };
 
   return (
@@ -39,6 +34,7 @@ const PaymentScreen = () => {
         <h1 className="text-2xl font-bold text-foreground mb-1">Payment</h1>
         <p className="text-sm text-muted-foreground mb-6">Select your preferred payment method</p>
 
+        {/* Amount */}
         <div className="glass-card p-4 mb-6 text-center">
           <p className="text-sm text-muted-foreground">Total Amount</p>
           <p className="text-3xl font-bold text-foreground mt-1">₹{totalCost.toLocaleString()}</p>
@@ -89,10 +85,10 @@ const PaymentScreen = () => {
 
         <Button
           onClick={handlePay}
-          disabled={!selected || loading}
+          disabled={!selected}
           className="w-full gradient-primary text-primary-foreground h-12 text-base font-semibold shadow-glow mt-6 disabled:opacity-50"
         >
-          <Lock className="w-4 h-4 mr-2" /> {loading ? 'Processing...' : `Pay ₹${totalCost.toLocaleString()}`}
+          <Lock className="w-4 h-4 mr-2" /> Pay ₹{totalCost.toLocaleString()}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground mt-3 flex items-center justify-center gap-1">

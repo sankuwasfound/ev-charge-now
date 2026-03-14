@@ -7,7 +7,6 @@ import BatteryScreen from '@/components/BatteryScreen';
 import DeliveryScreen from '@/components/DeliveryScreen';
 import PaymentScreen from '@/components/PaymentScreen';
 import TrackingScreen from '@/components/TrackingScreen';
-import OrderHistoryScreen from '@/components/OrderHistoryScreen';
 
 const screens: Record<string, React.FC> = {
   login: LoginScreen,
@@ -17,7 +16,6 @@ const screens: Record<string, React.FC> = {
   delivery: DeliveryScreen,
   payment: PaymentScreen,
   tracking: TrackingScreen,
-  history: OrderHistoryScreen,
 };
 
 const Index = () => {

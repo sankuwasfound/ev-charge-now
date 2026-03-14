@@ -3,14 +3,11 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/appStore';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 const OtpScreen = () => {
-  const { phone, setStep, setUser } = useAppStore();
+  const { phone, setStep } = useAppStore();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
-  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -33,35 +30,9 @@ const OtpScreen = () => {
     }
   };
 
-  const handleVerify = async () => {
-    const token = otp.join('');
-    if (token.length !== 6) return;
-
-    setLoading(true);
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone: `+91${phone}`,
-      token,
-      type: 'sms',
-    });
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    if (data.user) {
-      setUser(data.user);
+  const handleVerify = () => {
+    if (otp.every((d) => d !== '')) {
       setStep('location');
-    }
-  };
-
-  const handleResend = async () => {
-    const { error } = await supabase.auth.signInWithOtp({ phone: `+91${phone}` });
-    if (error) toast.error(error.message);
-    else {
-      toast.success('OTP resent!');
-      setTimer(30);
     }
   };
 
@@ -99,19 +70,15 @@ const OtpScreen = () => {
             ))}
           </div>
 
-          <Button
-            onClick={handleVerify}
-            disabled={!filled || loading}
-            className="w-full gradient-primary text-primary-foreground h-12 text-base font-semibold shadow-glow disabled:opacity-50"
-          >
-            {loading ? 'Verifying...' : 'Verify & Continue'}
+          <Button onClick={handleVerify} disabled={!filled} className="w-full gradient-primary text-primary-foreground h-12 text-base font-semibold shadow-glow disabled:opacity-50">
+            Verify & Continue
           </Button>
 
           <p className="text-center text-sm text-muted-foreground mt-4">
             {timer > 0 ? (
               <>Resend OTP in <span className="text-primary font-medium">{timer}s</span></>
             ) : (
-              <button onClick={handleResend} className="text-primary font-medium hover:underline">Resend OTP</button>
+              <button onClick={() => setTimer(30)} className="text-primary font-medium hover:underline">Resend OTP</button>
             )}
           </p>
         </div>
